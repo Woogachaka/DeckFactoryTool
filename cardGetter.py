@@ -204,7 +204,7 @@ def searchByParameters(args):
 
 def getCardManifest(uri):
     '''
-    given an extra uri, retrieve that extra's json
+    given a card uri, retrieve that card's json
     '''
     dataTxt = request.urlopen(uri).read()
     data = json.loads(dataTxt)

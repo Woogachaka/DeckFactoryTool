@@ -237,7 +237,66 @@ def saveSheet(sheet,deckName,sheetNum):
     global config
     config = df.loadConfig()
     sheet.save(config["printSheetsPath"]+config["systemSlash"]+deckName+str(sheetNum)+'.jpg')
-
+def handleMeldCards(deckManifest):
+    '''
+    given a deck manifest, go through it and find any and all meld cards,
+    determine if both halves are present, and then appropriately add it to extras
+    Also determine if that meld result generates extras.
+    '''
+    for card in deckManifest.cards:
+        if card.cardData["layout"]=='meld':
+            #we have a meld card, search for its counterpart
+            nameToMatch = ''
+            for i in card.cardData['all_parts']:
+                if i['component'] == 'meld_part' and not i['name'] == card.cardData['name']:
+                    nameToMatch = i['name']
+                    break
+            #we now have the name of the counterpart
+            #search the manifest to find that card. if its not present, then stop
+            for card2 in deckManifest.cards:
+                if card2.cardName == nameToMatch:
+                    #found it! add the meld result if not already present.
+                    for i in card2.cardData['all_parts']:
+                        listOfExtras = []
+                        for extra in deckManifest.extras:
+                            listOfExtras.append(extra.cardData['id'])
+                            
+                        if i['component'] == 'meld_result' and not i['id'] in listOfExtras:
+                            deckManifest.extras.append(cg.Card())
+                            deckManifest.extras[-1].cardData = cg.getCardManifest(i["uri"])
+                            deckManifest.extras[-1].cardName = deckManifest.extras[-1].cardData["name"]
+                            deckManifest.extras[-1].setCode = deckManifest.extras[-1].cardData["set"]
+                            deckManifest.extras[-1].cn = deckManifest.extras[-1].cardData["collector_number"]
+                            deckManifest.extras[-1].pileNumber = -1 #negative one is the default for tokens/extras
+                            deckManifest.cardCount = deckManifest.cardCount +1
+                            logger.debug("Extra added to Manifest")
+                            #check if this meld result has any tokens or emblem extras
+                            meldResultData = deckManifest.extras[-1].cardData
+                            if "all_parts" in meldResultData:
+                                for j in meldResultData["all_parts"]:
+                                    if j["component"] == 'token' or (j['component'] == 'combo_piece' and j['name'][-6:].lower() == 'emblem'):
+                                        duplicate = False
+                                        for k in deckManifest.extras:
+                                            if k.cardData["id"] == j["id"]:
+                                                #we found a duplicate, don't add it
+                                                duplicate = True
+                                                break
+                                        for k in deckManifest.cards:
+                                            if k.cardData["id"] == j["id"]:
+                                                #more duplicate finding, this way we cannot auto add something manually added
+                                                duplicate = True
+                                                break
+                                        if not duplicate:
+                                            deckManifest.extras.append(cg.Card())
+                                            deckManifest.extras[-1].cardData = cg.getCardManifest(j["uri"])
+                                            deckManifest.extras[-1].cardName = deckManifest.extras[-1].cardData["name"]
+                                            deckManifest.extras[-1].setCode = deckManifest.extras[-1].cardData["set"]
+                                            deckManifest.extras[-1].cn = deckManifest.extras[-1].cardData["collector_number"]
+                                            deckManifest.extras[-1].pileNumber = -1 #negative one is the default for tokens/extras
+                                            deckManifest.cardCount = deckManifest.cardCount +1
+                                            logger.debug("Extra added to Manifest")
+    
+    
 def buildManifest(cardMat,deckManifest,deckFileType):
     '''
     searches through the card matrix object that has been built and returns a
@@ -386,12 +445,8 @@ def buildManifest(cardMat,deckManifest,deckFileType):
                 deckManifest.cards.append(cg.Card())
                 cg.copyCard(i,deckManifest.cards[-1])
             deckManifest.cardCount = deckManifest.cardCount +1
-    '''
-    TODO: 
-        build a loop here to iterate through the manifest's main list and find
-        if any meld cards have both halves here, if so, add the meld result to 
-        the extras list.
-    '''
+            
+    handleMeldCards(deckManifest)
     if deckManifest.printable:
         buildPrint("deckManifest Completed")
         logger.debug("deckManifest Completed")
