@@ -516,9 +516,9 @@ def readInFile(listName):
                         cardName = cardName + term + ' '
                     cardMat[-1].cardName = cardName[:-1]#gets rid of the last space
                     #checking which pile the card belongs in
-                    if '`Commander`' in linesplit or '`Sideboard`' in linesplit:
+                    if '[Commander{top}]' in linesplit or '[Sideboard]' in linesplit:
                         cardMat[-1].pileNumber = 1
-                    elif '`Maybeboard`' in linesplit:
+                    elif '[Maybeboard]' in linesplit:
                         cardMat[-1].pileNumber = 2
                     else:
                         cardMat[-1].pileNumber = 0
