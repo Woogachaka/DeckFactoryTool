@@ -29,14 +29,14 @@ config = {
         "referenceImagesPath":"",
         "TTSSavedObjectsPath":"",
         "systemSlash":'/',
-        "logLevel":"ERROR",
+        "logLevel":"DEBUG",
         "imgurAccessToken":"",
         "imgurRefreshToken":""
         }
 
 client_id = '46a5b17af3f323c'
 
-client_secret = '293b64d937f56991f261334f4c7e928fb258c304'
+client_secret = 'afe33e4f0b0f54ad5529b62d2e8b5015591d15c2'
 def loadConfig():
     '''
     checks for configuration file adjacent to the executable and runs from there

@@ -479,7 +479,9 @@ def readInFile(listName):
                 
                 if fileType == 'txt' and line.split(' ')[0][-1]=='x':
                     fileType = 'archidekt'
-                
+                elif fileType == 'txt' and ('(' in line and ')' in line):
+                    fileType = 'moxfield'
+                    logger.debug('found moxfield styled decklist')
                 #print(line)
                 #sys.stdout.flush()
                 logger.debug("parsing line: " + line)
@@ -491,8 +493,8 @@ def readInFile(listName):
 
                     else:
                         cardMat.append(Card())
-                        targReg = re.search('\[(\S)*\]((\s)*(\S)*)*',line).group(0)
-                        setN = re.search('\[(\S)*\:',targReg).group()
+                        targReg = re.search('[(\S)*]((\s)*(\S)*)*',line).group(0)
+                        setN = re.search('[(\S)*\:',targReg).group()
                         setN = setN[1:-1]
                          #Xmage silliness corrected here to some extent (DARN YOU PROMOS)
                         doubleFacedSets = ['rix','soi','dka','xln','isd','emn','ori','m19']
@@ -512,7 +514,7 @@ def readInFile(listName):
                             setN = setN.lower()
                         
                         cardMat[-1].setCode = setN
-                        cNum = re.search('\:(\S)*\]',line).group()[1:-1]
+                        cNum = re.search('\:(\S)*]',line).group()[1:-1]
                         if cNum[-1] in cg.alphabet and setN in doubleFacedSets:#this eliminates front/back faces issues?
                             cNum = cNum[:-1]
                         
@@ -521,7 +523,7 @@ def readInFile(listName):
                             copies = line.split(' ')[1]
                             xmagePileNum = 1
                         
-                        cName = re.search('\]((\s)*(\S)*)*',line).group()[1:-1]
+                        cName = re.search(']((\s)*(\S)*)*',line).group()[1:-1]
                         cardMat[-1].cardName = cName
                         cardMat[-1].cn = cNum
                         cardMat[-1].copies= int(copies)
@@ -560,11 +562,9 @@ def readInFile(listName):
                                 except ValueError:
                                     #it wasn't a number
                                     pass
-                                
                             break
                     #we now have the brackets on the name's location in the string
                     nameTerms = linesplit[1:i]
-                    
                     cardName = ''
                     for term in nameTerms:
                         term = specialCharacterFilter(term)
@@ -578,6 +578,43 @@ def readInFile(listName):
                     else:
                         cardMat[-1].pileNumber = 0
                     
+                elif fileType == 'moxfield':
+                    print("importing moxfield case")
+                    cardMat.append(Card())
+                    linesplit = line.split(' ')
+                    linesplit[-1] = linesplit[-1].replace('\n','')
+                    cardMat[-1].copies = int(linesplit[0]) #this is the difference (no #x just #)
+                    #find the setcode:
+                    for i in range(len(linesplit)): #search from the back to reduce iterations
+                        term = linesplit[i]#search forwards
+                        if term[0] == '(' and term[-1]==')':
+                            cardMat[-1].setCode = term[1:-1]
+                            #we need to check if other terms follow the set code
+                            if i < len(linesplit)-1:
+                                #we have other terms
+                                try:
+                                    #the term after the set code is possibly the card number in the set
+                                    cardNum = int(linesplit[i+1])
+                                    #if it hasn't choked and died, then we have a card number in the set
+                                    cardMat[-1].cn = linesplit[i+1]
+                                except ValueError:
+                                    #it wasn't a number
+                                    pass
+                            break
+                    #we now have the brackets on the name's location in the string
+                    nameTerms = linesplit[1:i]
+                    cardName = ''
+                    for term in nameTerms:
+                        term = specialCharacterFilter(term)
+                        cardName = cardName + term + ' '
+                    cardMat[-1].cardName = cardName[:-1]#gets rid of the last space
+                    #checking which pile the card belongs in
+                    if '[Commander{top}]' in linesplit or '[Sideboard]' in linesplit:
+                        cardMat[-1].pileNumber = 1
+                    elif '[Maybeboard]' in linesplit:
+                        cardMat[-1].pileNumber = 2
+                    else:
+                        cardMat[-1].pileNumber = 0
                     
                 else:#text file type
                     #filter out comments and empty lines

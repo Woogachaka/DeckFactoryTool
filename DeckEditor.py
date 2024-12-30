@@ -46,6 +46,7 @@ def generateListEntry(selectedManifest):
     out += selectedManifest["pileNumber"]+" | "
     out += selectedManifest["uri"]+"\n"
     return out
+
 def searchCardDialogTree(searchManifest):
     savedCardInfo = ''
     returnString = ''
@@ -286,13 +287,16 @@ def editDeck():
         '''
         the purpose of this is to import an xmage deck into the new format,
         that way we can make all those decks not have gone to waste
+        
+        UPDATE 2024-12-30 BAZ - Updating this to allow for the Moxfield Deck Imports
+        format options are 'moxfield' and 'xmage'
         '''
         global config
         cardMat = sm.readInFile(targDeck)
         printList = [] #this will be a list of strings designed for printing in the decklist
         importWindow = tk.Tk()
-        importWindow.title("Importing Xmage Deck")
-        importLabel = tk.Label(importWindow,text="Import Xmage deck: Warning, this may take a few moments to complete.")
+        importWindow.title("Importing Deck from file")
+        importLabel = tk.Label(importWindow,text="Importing Deck from file: Warning, this may take a few moments to complete.")
         importLabel.pack()
         def importMatters():
             nonlocal cardMat
@@ -301,7 +305,7 @@ def editDeck():
             importWindow.destroy()
             for i in cardMat:
                 if(i.cardName == '' and i.cn == '' and i.setCode == ''):
-                        1+1 #do nothing
+                        pass #do nothing
                 else:
                     tempData = []
                     flag1 = False
