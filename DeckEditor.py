@@ -246,7 +246,6 @@ def editDeck():
             importDeckList(deckFile)
         elif(not deckFile == ''):
             strippedName = sm.stripName(deckFile)[:-4]
-            
             listWindow.delete('1.0',tk.END)
             listTitle.delete(0)
             listTitle.insert(tk.END,strippedName)

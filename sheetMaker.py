@@ -17,6 +17,7 @@ import json
 from time import sleep
 import logging
 from imgurpython import ImgurClient
+import copy
 
 config = {}#dictionary set by buildSheets via argument passed in from driver
 def specialCharacterFilter(string):
@@ -295,6 +296,22 @@ def handleMeldCards(deckManifest):
                                             deckManifest.extras[-1].pileNumber = -1 #negative one is the default for tokens/extras
                                             deckManifest.cardCount = deckManifest.cardCount +1
                                             logger.debug("Extra added to Manifest")
+
+def cull_non_paper(cardData):
+    '''
+    given a card data object, remove the entries in the card set that are not paper legal
+    '''
+    localCopy = copy.deepcopy(cardData)
+    #first, create a dummy data list
+    tempData = []
+    #then iterate through the current data set and append each entry that has paper legality
+    for i in localCopy['data']:
+        if 'paper' in i['games']:
+            tempData.append(copy.deepcopy(i))
+    localCopy['data'] = copy.deepcopy(tempData)
+    localCopy['total_cards'] = len(localCopy['data'])
+    return localCopy
+    
     
     
 def buildManifest(cardMat,deckManifest,deckFileType):
@@ -330,6 +347,8 @@ def buildManifest(cardMat,deckManifest,deckFileType):
                         deckManifest.printable = False
                         logger.debug("card name: " + i.cardName + " not found")
                 #print(cardData)
+                #ensure paper-legal only cards here:
+                i.cardData = cull_non_paper(i.cardData)
                 if not i.cardData == '' and i.notFindable == False:
                   logger.debug("cardData: " + str(i.cardData))
                   if "code" in cardData:
