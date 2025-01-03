@@ -481,7 +481,6 @@ def readInFile(listName):
                     fileType = 'archidekt'
                 elif fileType == 'txt' and ('(' in line and ')' in line):
                     fileType = 'moxfield'
-                    logger.debug('found moxfield styled decklist')
                 #print(line)
                 #sys.stdout.flush()
                 logger.debug("parsing line: " + line)
@@ -579,7 +578,6 @@ def readInFile(listName):
                         cardMat[-1].pileNumber = 0
                     
                 elif fileType == 'moxfield':
-                    print("importing moxfield case")
                     cardMat.append(Card())
                     linesplit = line.split(' ')
                     linesplit[-1] = linesplit[-1].replace('\n','')
